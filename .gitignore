@@ -1,0 +1,8 @@
+kotlin-js-store/
+build/
+
+.gradle/
+
+local.properties
+
+*.log
