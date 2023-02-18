@@ -3,13 +3,15 @@ package me.scidev5.application
 import wsTransaction.KWSTransactor
 import util.coroutine.MultiReceiverChannel
 import TestMessage
+import data.session.UserSessionData
 import wsTransaction.WSTransactionBiChannel
 import kotlinx.coroutines.*
 import me.scidev5.application.ws.ServerWebsocket
 import wsTransaction.runChannelUntilClose
 
-class ClientConnection(
+class ClientConnection private constructor(
     ws: ServerWebsocket,
+    private val session: UserSessionData,
 ) {
     val wtx = KWSTransactor.build(ws) {
         handle("h") {
@@ -22,7 +24,7 @@ class ClientConnection(
                 }
                 launch {
                     delay(1000)
-                    biChan.send(TestMessage("helo"))
+                    biChan.send(TestMessage("helo '${session.nickname}'"))
                 }
                 launch {
                     for (frame in biChan) {
@@ -38,6 +40,7 @@ class ClientConnection(
         }
     }
 
+
     @OptIn(DelicateCoroutinesApi::class)
     companion object {
         val msgs = MultiReceiverChannel<TestMessage>()
@@ -45,6 +48,14 @@ class ClientConnection(
             GlobalScope.launch {
                 msgs.pipeToReceivers()
             }
+        }
+
+        suspend fun run(
+            ws: ServerWebsocket,
+            session: UserSessionData
+        ) {
+            ClientConnection(ws, session)
+            ws.sendOutgoingFrames()
         }
     }
 }

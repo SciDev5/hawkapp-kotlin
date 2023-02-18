@@ -7,9 +7,7 @@ fun main() {
     val container = document.createElement("div")
     document.body!!.appendChild(container)
 
-    val welcome = AppMain.create {
-        sessionId = byteArrayOf(1,2,3,4,5)
-    }
+    val welcome = AppMain.create { }
 
     createRoot(container).render(welcome)
 }

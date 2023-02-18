@@ -8,7 +8,7 @@ import wsTransaction.KWSTransactor
 
 
 external interface ServerConnectionProps : Props {
-    var sessionId: ByteArray
+    var refreshHash: Int
     var children: ComposedElements<ServerConnectionChildrenData>
 
 }
@@ -23,7 +23,8 @@ val ServerConnection = FC<ServerConnectionProps> { props ->
 
     val scope = useCoroutineScope()
 
-    useEffect(props.sessionId, scope) {
+    useEffect(props.refreshHash, scope) {
+        var connectionEnded = false
         val ws = connectWebSocket(websocketUrl(Endpoints.websocketPrimary), scope)
         failed = false
         val newTxr = KWSTransactor.build(ws, scope) {
@@ -39,10 +40,12 @@ val ServerConnection = FC<ServerConnectionProps> { props ->
             }
             ws.waitClosed()
             helloJob.cancel()
-            if (txr == newTxr) txr = null
+            if (!connectionEnded) txr = null
         }
         cleanup {
             ws.close(1000, "ending")
+            txr = null
+            connectionEnded = true
         }
     }
 
