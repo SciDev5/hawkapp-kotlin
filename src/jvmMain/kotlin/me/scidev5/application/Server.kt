@@ -1,8 +1,6 @@
 package me.scidev5.application
 
 import Endpoints
-import TestMessage
-import data.session.LoginRequestData
 import data.session.UserSessionData
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -12,13 +10,12 @@ import io.ktor.server.html.*
 import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.html.*
+import me.scidev5.application.util.Env
 import me.scidev5.application.ws.websocketObject
 
 fun HTML.index() {
@@ -36,6 +33,15 @@ fun HTML.index() {
     }
 }
 
+fun HTML.notFoundPage() {
+    head {
+        title("HawkApp - 404")
+    }
+    body {
+        +"404 lol"
+    }
+}
+
 fun main() {
     embeddedServer(Netty, port = 8080, host = "127.0.0.1", watchPaths = listOf("jvm")) {
         install(WebSockets) {
@@ -46,31 +52,15 @@ fun main() {
         }
         install(Sessions) {
             cookie<UserSessionData>(UserSessionData.COOKIE_NAME) {
-
+                cookie.path = "/"
+                transform(SessionTransportTransformerMessageAuthentication(Env.sessionCookieSignKey))
             }
         }
         routing {
-            get("/test") {
-                call.respond(TestMessage("helo world"))
-            }
-            get("/") {
-                call.respondHtml(HttpStatusCode.OK, HTML::index)
-            }
-            route("/auth") {
-                post("/login") {
-                    val loginRequest = call.receive<LoginRequestData>()
-                    val newSession = UserSessionData(loginRequest.nickname)
-                    call.sessions.set(newSession)
-                    call.respond(HttpStatusCode.OK, newSession)
-                }
-                post("/logout") {
-                    call.sessions.clear(UserSessionData.COOKIE_NAME)
-                    call.respond(HttpStatusCode.OK, true)
-                }
-            }
-            get("/*") {
-               call.respondText("404 lmao", ContentType.Text.Plain, HttpStatusCode.NotFound)
-            }
+            get("/") { call.respondHtml(HttpStatusCode.OK, HTML::index) }
+
+            authRoute()
+
             webSocket(Endpoints.websocketPrimary) {
                 val session = call.sessions.get<UserSessionData>()
                 if (session == null) {
@@ -81,9 +71,11 @@ fun main() {
                 ClientConnection.run(websocketObject(), session)
                 println(">>>>> close")
             }
-            static("/static") {
-                resources()
-            }
+
+            static("/static") { resources() }
+
+            get("/*") { call.respondHtml(HttpStatusCode.NotFound, HTML::notFoundPage) }
+
         }
     }.start(wait = true)
 }

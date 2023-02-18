@@ -1,5 +1,4 @@
-import data.session.LoginRequestData
-import data.session.UserSessionData
+import data.session.HTTPLoginData
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import react.FC
@@ -83,9 +82,9 @@ val AppMain = FC<Props> { _ ->
         onClick = suspendCallback(s) {
             val name = window.prompt("Nickname?")
                 ?: return@suspendCallback
-            Fetch.post<LoginRequestData, UserSessionData>(
-                "/auth/login",
-                LoginRequestData(name)
+            Fetch.post<HTTPLoginData.ReqLogin, HTTPLoginData.ResLogin>(
+                Endpoints.Auth.login,
+                HTTPLoginData.ReqLogin(name)
             )
             wsRefreshHash = Random.nextInt()
         }
@@ -93,15 +92,10 @@ val AppMain = FC<Props> { _ ->
     }
     button {
         onClick = suspendCallback(s) {
-            Fetch.post<Boolean>("/auth/logout")
+            Fetch.post<HTTPLoginData.ResLogout>(Endpoints.Auth.logout)
             wsRefreshHash = Random.nextInt()
         }
         +"logout"
-    }
-    button {
-        onClick = suspendCallback(s) {
-            println(Fetch.get<TestMessage>("/test"))
-        }
     }
 
     println("RE-RENDER#$wsRefreshHash")
