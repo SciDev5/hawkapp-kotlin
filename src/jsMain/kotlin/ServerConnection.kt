@@ -1,3 +1,4 @@
+import data.TimestampedId
 import kotlinx.coroutines.launch
 import react.*
 import util.react.ComposedElements
@@ -8,7 +9,7 @@ import wsTransaction.KWSTransactor
 
 
 external interface ServerConnectionProps : Props {
-    var refreshHash: Int
+    var userId: TimestampedId?
     var children: ComposedElements<ServerConnectionChildrenData>
 
 }
@@ -23,7 +24,7 @@ val ServerConnection = FC<ServerConnectionProps> { props ->
 
     val scope = useCoroutineScope()
 
-    useEffect(props.refreshHash, scope) {
+    useEffect(props.userId?.v, scope) {
         var connectionEnded = false
         val ws = connectWebSocket(websocketUrl(Endpoints.websocketPrimary), scope)
         failed = false

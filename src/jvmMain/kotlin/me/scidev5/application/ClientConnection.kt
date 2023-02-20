@@ -3,7 +3,6 @@ package me.scidev5.application
 import wsTransaction.KWSTransactor
 import util.coroutine.MultiReceiverChannel
 import TestMessage
-import data.session.UserSessionData
 import wsTransaction.WSTransactionBiChannel
 import kotlinx.coroutines.*
 import me.scidev5.application.ws.ServerWebsocket
@@ -11,7 +10,7 @@ import wsTransaction.runChannelUntilClose
 
 class ClientConnection private constructor(
     ws: ServerWebsocket,
-    private val session: UserSessionData,
+    private val user: User,
 ) {
     val wtx = KWSTransactor.build(ws) {
         handle("h") {
@@ -24,7 +23,7 @@ class ClientConnection private constructor(
                 }
                 launch {
                     delay(1000)
-                    biChan.send(TestMessage("helo '${session.nickname}'"))
+                    biChan.send(TestMessage("helo '${user.data.username}'"))
                 }
                 launch {
                     for (frame in biChan) {
@@ -52,9 +51,9 @@ class ClientConnection private constructor(
 
         suspend fun run(
             ws: ServerWebsocket,
-            session: UserSessionData
+            user: User
         ) {
-            ClientConnection(ws, session)
+            ClientConnection(ws, user)
             ws.sendOutgoingFrames()
         }
     }

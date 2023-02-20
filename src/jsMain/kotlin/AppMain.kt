@@ -1,21 +1,20 @@
-import data.session.HTTPLoginData
+import data.user.UserData
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import react.FC
 import react.Props
 import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.button
+import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.input
 import react.useEffect
 import react.useState
-import util.Fetch
 import util.react.childElements
 import util.react.suspendCallback
 import util.react.useCoroutineScope
 import wsTransaction.KWSTransactor
 import wsTransaction.WSTransactionBiChannel
 import wsTransaction.runChannelUntilClose
-import kotlin.random.Random
 
 external interface KProps : Props {
     var txr: KWSTransactor
@@ -71,38 +70,46 @@ val K = FC<KProps> { props ->
             }
         }
     }
-    +"$txt [$behind]"
+    +"$txt ($behind)"
 }
 
 val AppMain = FC<Props> { _ ->
     val s = useCoroutineScope()
-    var wsRefreshHash by useState(0)
+    val userId = Auth.useCurrentUserId()
 
-    button {
-        onClick = suspendCallback(s) {
-            val name = window.prompt("Nickname?")
-                ?: return@suspendCallback
-            Fetch.post<HTTPLoginData.ReqLogin, HTTPLoginData.ResLogin>(
-                Endpoints.Auth.login,
-                HTTPLoginData.ReqLogin(name)
-            )
-            wsRefreshHash = Random.nextInt()
+    if (userId == null) {
+        button {
+            onClick = suspendCallback(s) {
+                val username = window.prompt("Username?") ?: return@suspendCallback
+                val password = window.prompt("Password?") ?: return@suspendCallback
+                Auth.login(username, password)
+            }
+            +"login"
         }
-        +"login"
-    }
-    button {
-        onClick = suspendCallback(s) {
-            Fetch.post<HTTPLoginData.ResLogout>(Endpoints.Auth.logout)
-            wsRefreshHash = Random.nextInt()
+        button {
+            onClick = suspendCallback(s) {
+                val username = window.prompt("Username?") ?: return@suspendCallback
+                val password = window.prompt("Password?") ?: return@suspendCallback
+                Auth.signup(UserData.Creation(username, password))
+            }
+            +"signup"
         }
-        +"logout"
+    } else {
+        button {
+            onClick = suspendCallback(s) {
+                Auth.logout()
+            }
+            +"logout"
+        }
     }
 
-    println("RE-RENDER#$wsRefreshHash")
+    div {
+        +"user id: ${userId?.v?.toString(16) ?: "<NULL>"}"
+    }
 
 
     ServerConnection {
-        refreshHash = wsRefreshHash.hashCode()
+        this.userId = userId
         children = childElements {
             if (it is SCDataConnected) {
                 +"CONNECTED"

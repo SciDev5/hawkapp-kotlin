@@ -42,7 +42,10 @@ fun HTML.notFoundPage() {
     }
 }
 
+
 fun main() {
+    databaseInit()
+
     embeddedServer(Netty, port = 8080, host = "127.0.0.1", watchPaths = listOf("jvm")) {
         install(WebSockets) {
             pingPeriodMillis = 10000
@@ -53,6 +56,7 @@ fun main() {
         install(Sessions) {
             cookie<UserSessionData>(UserSessionData.COOKIE_NAME) {
                 cookie.path = "/"
+                cookie.httpOnly = false
                 transform(SessionTransportTransformerMessageAuthentication(Env.sessionCookieSignKey))
             }
         }
@@ -62,13 +66,18 @@ fun main() {
             authRoute()
 
             webSocket(Endpoints.websocketPrimary) {
-                val session = call.sessions.get<UserSessionData>()
-                if (session == null) {
-                    close(CloseReason(1000, "no session"))
-                    return@webSocket
-                }
+                val user = call.sessions.get<UserSessionData>()
+                    ?.let {
+                        User.Instances[it.userId]
+                    }
+                    ?: run {
+                        close(CloseReason(1000, "no session"))
+                        return@webSocket
+                    }
+                println(user.data.username)
+
                 println(">>>>> open")
-                ClientConnection.run(websocketObject(), session)
+                ClientConnection.run(websocketObject(), user)
                 println(">>>>> close")
             }
 

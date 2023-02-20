@@ -7,6 +7,10 @@ plugins {
 group = "me.scidev5"
 version = "1.0-SNAPSHOT"
 
+val ktor_version:String by project
+val exposed_version: String by project
+val h2_version: String by project
+
 repositories {
     jcenter()
     mavenCentral()
@@ -45,15 +49,21 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                val ktorVersion = "2.0.2"
-                implementation("io.ktor:ktor-server-netty:$ktorVersion")
-                implementation("io.ktor:ktor-server-html-builder-jvm:$ktorVersion")
+                implementation("io.ktor:ktor-server-netty:$ktor_version")
+                implementation("io.ktor:ktor-server-html-builder-jvm:$ktor_version")
                 implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.2")
 
-                implementation("io.ktor:ktor-server-websockets:$ktorVersion")
-                implementation("io.ktor:ktor-server-sessions:$ktorVersion")
-                implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+                implementation("io.ktor:ktor-server-websockets:$ktor_version")
+                implementation("io.ktor:ktor-server-sessions:$ktor_version")
+                implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+
+                implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
+                implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
+                implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
+                implementation("com.h2database:h2:$h2_version")
+
+                implementation("org.mindrot:jbcrypt:0.4")
 
 //                implementation("org.slf4j:slf4j-log4j12:1.7.30")
                 implementation("ch.qos.logback:logback-classic:1.2.11")
