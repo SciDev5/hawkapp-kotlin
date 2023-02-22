@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.ColumnType
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.api.PreparedStatementApi
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import kotlin.random.Random
 
 class TimestampedIdColumnType : ColumnType() {
     override fun sqlType(): String = currentDialect.dataTypeProvider.longType()
@@ -34,7 +33,7 @@ class TimestampedIdColumnType : ColumnType() {
 }
 open class TimestampedIdTable(name: String = "", columnName: String = "id") : IdTable<TimestampedId>(name) {
     final override val id: Column<EntityID<TimestampedId>> = timestampedId(columnName).clientDefault {
-        TimestampedId(Random.nextInt(),(System.currentTimeMillis()/1000).toInt())
+        TimestampedId.generate()
     }.entityId()
     final override val primaryKey = PrimaryKey(id)
 }

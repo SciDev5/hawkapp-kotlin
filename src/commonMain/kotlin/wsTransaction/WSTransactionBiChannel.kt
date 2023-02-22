@@ -102,6 +102,8 @@ class WSTransactionBiChannel<In, Out> private constructor(
     }
 
     suspend fun close() {
+        if (closed) return // do not close twice
+
         channelControlsOut.send(PacketType.CLOSE)
         closeChannels()
     }

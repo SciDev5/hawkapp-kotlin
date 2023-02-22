@@ -15,10 +15,22 @@ class TextValidator(private val checks: Checks.() -> Unit) {
         override fun failsOn(text: String) = text.length < minLen
     }
 
-    @Serializable
+    @Serializable//(with = TooLongFailure.Serializer::class)
     @SerialName("TooLongFailure")
-    class TooLongFailure(val maxLen: Int) : Failure {
-        override fun failsOn(text: String) = text.length > maxLen
+    class TooLongFailure(val maxL: Int) : Failure {
+        override fun failsOn(text: String) = text.length > maxL
+
+//        /** custom serializer because it wouldn't work by default so ¯\_(ツ)_/¯ */
+//        class Serializer : KSerializer<TooLongFailure>  {
+//            override val descriptor = PrimitiveSerialDescriptor("TooLongFailure", PrimitiveKind.INT)
+//
+//            override fun deserialize(decoder: Decoder) =
+//                TooLongFailure(decoder.decodeInt())
+//
+//            override fun serialize(encoder: Encoder, value: TooLongFailure) {
+//                encoder.encodeInt(value.maxLen)
+//            }
+//        }
     }
     @Serializable
     object UntrimmedFailure : Failure {

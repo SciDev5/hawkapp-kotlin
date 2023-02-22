@@ -118,6 +118,9 @@ class KWSTransactor(
         handlers[key] = handler
     }
 
+    fun handle(handler: KWSTransactionHandle) =
+        handle(handler.key, handler.block)
+
     suspend fun <R> run(key: String, handler: suspend Transaction.Scope.() -> R): R {
         if (!ws.open)
             throw Error("Cannot run transaction on non-open websocket")

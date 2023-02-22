@@ -1,8 +1,13 @@
 package data
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
-@Serializable
+@Serializable(with = TimestampedId.Serializer::class)
 class TimestampedId(val v: Long) : Comparable<TimestampedId> {
 
     constructor(
@@ -35,4 +40,15 @@ class TimestampedId(val v: Long) : Comparable<TimestampedId> {
             .toString(16)
             .let { "0".repeat(16 - it.length) + it }
     }"
+
+    class Serializer : KSerializer<TimestampedId> {
+        override val descriptor = PrimitiveSerialDescriptor("TimestampedId", PrimitiveKind.LONG)
+
+        override fun deserialize(decoder: Decoder) =
+            TimestampedId(decoder.decodeLong())
+
+        override fun serialize(encoder: Encoder, value: TimestampedId) {
+            encoder.encodeLong(value.v)
+        }
+    }
 }
