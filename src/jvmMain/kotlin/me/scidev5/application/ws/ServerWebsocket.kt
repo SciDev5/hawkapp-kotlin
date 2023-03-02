@@ -1,7 +1,7 @@
 package me.scidev5.application.ws
 
 import wsTransaction.CommonWebsocket
-import util.coroutine.UntilReadyLock
+import util.coroutine.UntilLock
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.Channel
@@ -30,7 +30,7 @@ class ServerWebsocket(
         receiveLock.unlock()
     }
 
-    private val receiveLock = UntilReadyLock()
+    private val receiveLock = UntilLock()
 
     private var closed = false
     override val readyState: ReadyState

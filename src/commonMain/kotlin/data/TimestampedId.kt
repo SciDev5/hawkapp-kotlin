@@ -51,4 +51,9 @@ class TimestampedId(val v: Long) : Comparable<TimestampedId> {
             encoder.encodeLong(value.v)
         }
     }
+
+    @Serializable
+    data class SerialBox(val v: TimestampedId)
+
+    fun serial() = SerialBox(this)
 }

@@ -29,9 +29,13 @@ class MultiReceiverChannel<T> private constructor(
 
     override fun close(cause: Throwable?) =
         channel.close(cause).also {
-            println("CLOSING MULTIRECEIVER")
+//            println("CLOSING MULTI-RECEIVER")
             receivers.forEach { it.close(cause) }
         }
+    fun closeIfNoReceiversLeft(cause: Throwable? = null) =
+        if (receivers.isEmpty())
+            close(cause)
+        else false
 
     inner class Receiver private constructor(
         private val receiverChannel: Channel<T>

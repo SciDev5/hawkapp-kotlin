@@ -12,53 +12,86 @@ import org.mindrot.jbcrypt.BCrypt
 import util.IdSingletonMap
 import util.NonBlockingUpdates
 import util.UpdateReceiver
+import wsTransaction.KWSTransactionHandle
+import wsTransaction.syncSend
 
 class User private constructor(
-    data: UserData,
+    val ref: DB.User,
     private val updates: NonBlockingUpdates<UserData> = NonBlockingUpdates()
 ) : UpdateReceiver<UserData> by updates,
     IdSingletonMap.HasId<TimestampedId> {
 
-    override val id = data.id
-    var data = data
-        set(newValue) {
-            if (newValue.id != field.id)
-                throw Error("Cannot update user with another user's data")
+    override val id = ref.id.value
+    val data
+        get() = transaction {
+            UserData(
+                id = this@User.id,
+                username = username
+            )
+        }
 
+    var username
+        get() = ref.username
+        set(value) {
             transaction {
-                findThisInDB().username = newValue.username
+                ref.username = value
             }
-            field = newValue
             updates.send(data)
         }
 
-    private fun findThisInDB() = DB.User.findById(this@User.id)
-        ?: throw Error("User not found in database")
+    private var nRefs = 0
+    fun abandon() {
+        nRefs--
+        Instances.forget(this)
+    }
+    fun <T> use(block:()->T) {
+        nRefs++
+        block()
+        abandon()
+    }
+
+    fun forget(): Boolean {
+        if (nRefs > 0) return false
+
+        return true
+    }
 
     fun checkPassword(password: String) =
         BCrypt.checkpw(password, transaction {
-            findThisInDB().passHash
+            ref.passHash
         })
 
     object Instances : IdSingletonMap<User, TimestampedId, UserData.Creation>() {
         override fun readFetch(id: TimestampedId) =
             transaction {
                 DB.User.findById(id)
-            }?.let { User(it.toData()) }
+            }?.let { User(it) }
 
+        override fun alsoOnGet(v: User) {
+            v.nRefs++
+        }
+        override fun forgetIfPossible(v: User) = v.forget()
         override fun createFetch(data: UserData.Creation) =
-            transaction {
+            User(transaction {
                 DB.User.new {
                     username = data.username
                     passHash = BCrypt.hashpw(data.password, BCrypt.gensalt())
                 }
-            }.let { User(it.toData()) }
+            })
 
         fun byUsername(username: String) = transaction {
             DB.User.findFirst {
                 DB.Users.username eq username
             }
         }?.let {
+            Instances[it.id.value]
+        }
+
+        fun likeUsername(username: String) = transaction {
+            DB.User.find {
+                DB.Users.username like "%$username%"
+            }
+        }.mapNotNull {
             Instances[it.id.value]
         }
     }
@@ -74,8 +107,34 @@ class User private constructor(
 
             var username by Users.username
             var passHash by Users.passHash
+        }
+    }
 
-            fun toData() = UserData(id = id.value, username = username)
+    object Handle {
+        fun watchUser() = KWSTransactionHandle(UserData.TransactionNames.SYNC) {
+            val user = Instances[nextData()]
+                ?: run {
+                    send(false)
+                    return@KWSTransactionHandle
+                }
+            send(true)
+
+            val (watch, endWatch) = user.watch()
+            syncSend(watch, cleanup = { endWatch() })
+
+        }
+        fun getUser() = KWSTransactionHandle(UserData.TransactionNames.GET) {
+            send(Instances[nextData<TimestampedId.SerialBox>().v]?.data)
+        }
+        fun lookupUsername() = KWSTransactionHandle(UserData.TransactionNames.LOOKUP_USERNAME) {
+            val (looseSearch, username) = nextData<Pair<Boolean,String>>()
+
+            println("LOOSE: $looseSearch, UNM: $username")
+            if (looseSearch) { // loose search mode
+                send(Instances.likeUsername(username).map { it.data })
+            } else {
+                send(Instances.byUsername(username)?.data)
+            }
         }
     }
 }

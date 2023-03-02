@@ -4,6 +4,9 @@ import data.TimestampedId
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ChannelLookupData(
-    val chId: TimestampedId
-)
+sealed interface ChannelLookupData {
+    @Serializable
+    data class DM(
+        val id: TimestampedId
+    ): ChannelLookupData
+}

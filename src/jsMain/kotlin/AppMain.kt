@@ -1,6 +1,3 @@
-import channel.MessageChannel
-import data.TimestampedId
-import data.channel.ChannelLookupData
 import data.user.UserData
 import kotlinx.browser.window
 import react.FC
@@ -10,19 +7,7 @@ import react.dom.html.ReactHTML.div
 import util.react.childElements
 import util.react.suspendCallback
 import util.react.useCoroutineScope
-import wsTransaction.KWSTransactor
 
-external interface KProps : Props {
-    var txr: KWSTransactor
-}
-
-
-val K = FC<KProps> { props ->
-    MessageChannel {
-        txr = props.txr
-        channelLookup = ChannelLookupData(TimestampedId(0,0))
-    }
-}
 
 val AppMain = FC<Props> { _ ->
     val s = useCoroutineScope()
@@ -64,7 +49,7 @@ val AppMain = FC<Props> { _ ->
         children = childElements {
             if (it is SCDataConnected) {
                 +"CONNECTED"
-                K {
+                AppConnected {
                     txr = it.txr
                 }
             }

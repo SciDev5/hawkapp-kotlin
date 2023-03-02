@@ -24,4 +24,10 @@ data class UserData(
             noBoundingWhitespace()
         }
     }
+
+    object TransactionNames {
+        const val GET = "u_g"
+        const val SYNC = "u_s"
+        const val LOOKUP_USERNAME = "u_u"
+    }
 }

@@ -5,7 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 
 interface UpdateReceiver<T> {
-    fun watch(): ReceiveChannel<T>
+    fun watch(): Pair<ReceiveChannel<T>,()->Unit>
 }
 
 interface UpdateSender<T> {
@@ -21,9 +21,16 @@ class NonBlockingUpdates<T> : UpdateReceiver<T>, UpdateSender<T> {
             throw Error("UpdateSender is closed")
         else block()
 
-    override fun watch(): ReceiveChannel<T> = throwIfClosedOrElse {
+    override fun watch(): Pair<ReceiveChannel<T>,()->Unit> = throwIfClosedOrElse {
         Channel<T>(1, BufferOverflow.DROP_OLDEST).also {
             channels.add(it)
+        }.let {
+            Pair(
+                it
+            ) {
+                channels.remove(it)
+                it.close()
+            }
         }
     }
 
@@ -37,4 +44,6 @@ class NonBlockingUpdates<T> : UpdateReceiver<T>, UpdateSender<T> {
         for (channel in channels)
             channel.close()
     }
+
+    val isWatched get() = channels.isNotEmpty()
 }

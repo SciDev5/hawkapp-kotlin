@@ -3,13 +3,15 @@ package util.coroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class UntilReadyLock {
+class UntilLock {
     private val blocker = Mutex(locked = true)
 
+    private var locked = true
     fun unlock() {
-        if (blocker.isLocked)
+        if (locked)
             blocker.unlock()
+        locked = false
     }
 
-    suspend fun wait() = blocker.withLock { }
+    suspend fun wait() = if (locked) blocker.withLock { } else Unit
 }

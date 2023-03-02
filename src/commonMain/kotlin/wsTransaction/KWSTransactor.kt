@@ -28,7 +28,7 @@ class KWSTransactor(
         ws.addReceiveBinaryHandle(this::receiveBinaryRaw)
         scope.launch {
             ws.waitClosed()
-            for ((_, tx) in transactions)
+            for (tx in transactions.values.toList())
                 tx.end()
         }
     }

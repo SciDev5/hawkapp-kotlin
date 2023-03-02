@@ -4,12 +4,11 @@ import data.TimestampedId
 import kotlinx.serialization.Serializable
 
 @Serializable
-class ChannelData(val name: String, val members: Array<Member>) {
-    @Serializable
-    data class Member(
-        val id: TimestampedId,
-        val writeAccess: Boolean
-    )
+class ChannelData(
+    val id: TimestampedId,
+    val name: String,
+    val members: Array<ChannelMemberData>
+) {
 
     object TransactionNames {
         private const val BASE = "ch"
