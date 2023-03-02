@@ -2,7 +2,6 @@ package me.scidev5.application
 
 import Endpoints
 import data.session.UserSessionData
-import data.user.UserData
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -47,9 +46,6 @@ fun HTML.notFoundPage() {
 
 fun main() {
     databaseInit()
-
-    User.Instances.create(UserData.Creation("a",""))
-    User.Instances.create(UserData.Creation("b",""))
 
     embeddedServer(Netty, port = 8080, host = "127.0.0.1", watchPaths = listOf("jvm")) {
         install(WebSockets) {

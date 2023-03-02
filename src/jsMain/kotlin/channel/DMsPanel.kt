@@ -2,6 +2,7 @@ package channel
 
 import User
 import data.TimestampedId
+import data.channel.ChannelLookupData
 import data.channel.DMZoneData
 import data.user.UserData
 import kotlinx.browser.window
@@ -29,15 +30,17 @@ fun watchDMList(
         }
     }
 }
+
 suspend fun createDM(
     txr: KWSTransactor,
     writers: Set<User>
 ) =
     txr.run(DMZoneData.TransactionNames.CREATE) {
-        sendReceive<List<UserData>,TimestampedId.SerialBox>(
+        sendReceive<List<UserData>, TimestampedId.SerialBox>(
             writers.map { it.data }
         ).v
     }
+
 suspend fun leaveDM(
     txr: KWSTransactor,
     zone: DMZoneData
@@ -52,6 +55,7 @@ external interface DMsPanelProps : Props {
 
 val DMsPanel = FC<DMsPanelProps> { props ->
     var zones by useState<Set<DMZoneData>>(emptySet())
+    var selectedZone by useState<TimestampedId?>(null)
 
     val scope = useCoroutineScope()
 
@@ -63,6 +67,16 @@ val DMsPanel = FC<DMsPanelProps> { props ->
                 zones = it
             }
         }
+    }
+    useEffect(zones.map { it.id }.toSet(), selectedZone) {
+        var z = selectedZone
+        if (z != null)
+            if (zones.none { it.id == z })
+                z = null
+        z = z ?: zones.firstOrNull()?.id
+
+        if (selectedZone != z)
+            selectedZone = z
     }
 
     div {
@@ -82,7 +96,7 @@ val DMsPanel = FC<DMsPanelProps> { props ->
 
                     createDM(props.txr, setOf(user))
                 }
-                + "Begin Message"
+                +"Begin Message"
             }
         }
 
@@ -93,15 +107,37 @@ val DMsPanel = FC<DMsPanelProps> { props ->
         div {
             for (zone in zones) {
                 div {
-                    + ">> ${zone.members.joinToString(" & ") { it.id.randomPart.toString(36) }}"
+                    val isSelected = zone.id == selectedZone
+                    if (isSelected)
+                        +"> "
+                    +":: ${zone.members.joinToString(", ") { it.id.toString() }}"
                     button {
                         onClick = suspendCallback(scope) {
                             if (window.confirm("u sure?"))
                                 leaveDM(props.txr, zone)
                         }
-                        + "x"
+                        +"x"
                     }
+                    if (!isSelected)
+                        button {
+                            onClick = suspendCallback(scope) {
+                                selectedZone = zone.id
+                            }
+                            +"select"
+                        }
                 }
+            }
+        }
+        selectedZone?.also { zoneId ->
+            div {
+                MessageChannel {
+                    txr = props.txr
+                    channelLookup = ChannelLookupData.DM(zoneId)
+                }
+            }
+        } ?: run {
+            div {
+                +"[[NO DM SELECTED]]"
             }
         }
     }

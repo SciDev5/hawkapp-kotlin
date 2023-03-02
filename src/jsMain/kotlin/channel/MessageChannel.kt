@@ -10,6 +10,7 @@ import react.dom.html.ReactHTML
 import react.dom.html.ReactHTML.div
 import react.useEffect
 import react.useState
+import util.react.suspendCallback
 import util.react.useCoroutineScope
 import wsTransaction.KWSTransactor
 import wsTransaction.WSTransactionBiChannel
@@ -31,8 +32,15 @@ val MessageChannel = FC<MessageChannelProps> { props ->
 
         val txr = props.txr
         val scope = useCoroutineScope()
-        useEffect(txr,props.channelLookup) {
+        useEffect(
+            txr,
+            props.channelLookup::class,
+            props.channelLookup.hashCode()
+        ) {
+            var txt2 = "-"
+            txt = txt2
             failed = false
+            var ranCleanup = false
             val biChan = WSTransactionBiChannel<ChannelMessageData, ChannelMessageData.Content>()
             chan = biChan
             scope.launch {
@@ -51,13 +59,18 @@ val MessageChannel = FC<MessageChannelProps> { props ->
                         behind = k
                     }
                 }
-                var txt2 = txt
                 for (data in biChan) {
                     txt2 += "\n[${data.sender}:${data.content.t}]"
-                    txt = txt2
+                    if (!ranCleanup) txt = txt2
                 }
                 txt2 += "<END>"
-                txt = txt2
+                if (!ranCleanup) txt = txt2
+            }
+            cleanup {
+                ranCleanup = true
+                scope.launch {
+                    biChan.close()
+                }
             }
         }
         var inpText by useState("")
@@ -68,14 +81,12 @@ val MessageChannel = FC<MessageChannelProps> { props ->
                     onChange = {
                         inpText = it.currentTarget.value
                     }
-                }
-                ReactHTML.button {
-                    onClick = {
-                        scope.launch {
+                    onKeyDown = suspendCallback(scope) {
+                        if (it.key == "Enter") {
                             chan!!.send(ChannelMessageData.Content(t = inpText))
+                            inpText = ""
                         }
                     }
-                    +"send"
                 }
             }
         }
