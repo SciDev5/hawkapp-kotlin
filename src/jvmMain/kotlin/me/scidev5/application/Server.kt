@@ -78,7 +78,6 @@ fun main() {
                         close(CloseReason(1000, "no session"))
                         return@webSocket
                     }
-
                 println(">>>>> open [user: '${user.data.username}']")
                 ClientConnection.run(websocketObject(), user)
                 println(">>>>> close")
