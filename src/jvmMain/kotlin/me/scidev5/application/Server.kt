@@ -22,6 +22,7 @@ import me.scidev5.application.ws.websocketObject
 fun HTML.index() {
     head {
         title("HawkApp")
+        link(rel = "icon", type = "image/x-icon", href = "/static/favicon.ico")
     }
     body {
         div {
