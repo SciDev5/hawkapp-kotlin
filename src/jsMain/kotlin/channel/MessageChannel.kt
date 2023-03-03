@@ -12,16 +12,16 @@ import react.useEffect
 import react.useState
 import util.react.suspendCallback
 import util.react.useCoroutineScope
-import wsTransaction.KWSTransactor
+import util.react.useTXR
 import wsTransaction.WSTransactionBiChannel
 import wsTransaction.runChannelUntilClose
 
 external interface MessageChannelProps : Props {
-    var txr: KWSTransactor
     var channelLookup: ChannelLookupData
 }
 
 val MessageChannel = FC<MessageChannelProps> { props ->
+    val txr = useTXR()
 
     div {
 
@@ -30,7 +30,6 @@ val MessageChannel = FC<MessageChannelProps> { props ->
         var behind by useState(0)
         var failed by useState(false)
 
-        val txr = props.txr
         val scope = useCoroutineScope()
         useEffect(
             txr,

@@ -1,11 +1,17 @@
 package util
 
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.launch
+import util.coroutine.UntilLock
 
 interface UpdateReceiver<T> {
     fun watch(): Pair<ReceiveChannel<T>,()->Unit>
+    fun watch(untilLock: UntilLock): ReceiveChannel<T>
 }
 
 interface UpdateSender<T> {
@@ -27,12 +33,28 @@ class NonBlockingUpdates<T> : UpdateReceiver<T>, UpdateSender<T> {
         }.let {
             Pair(
                 it
-            ) {
-                channels.remove(it)
-                it.close()
-            }
+            ) { closeChannel(it) }
         }
     }
+
+    private fun closeChannel(channel: Channel<T>) {
+        channels.remove(channel)
+        channel.close()
+    }
+    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
+    override fun watch(untilLock: UntilLock) =
+        Channel<T>(1, BufferOverflow.DROP_OLDEST).also {
+            val endJob = GlobalScope.launch {
+                untilLock.wait()
+                closeChannel(it)
+            }
+            it.invokeOnClose { _ ->
+                if (endJob.isActive)
+                    endJob.cancel()
+                closeChannel(it)
+            }
+            channels.add(it)
+        }
 
     override fun send(data: T) = throwIfClosedOrElse {
         for (channel in channels)

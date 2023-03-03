@@ -31,12 +31,17 @@ class User private constructor(
 
     init {
         GlobalScope.launch {
-            txr.run(UserData.TransactionNames.SYNC) {
+            txr.run<Throwable?>(UserData.TransactionNames.SYNC) {
+                send(id.serial())
+                if (!nextData<Boolean>())
+                    return@run Error("User not found for sync")
                 syncReceive<UserData>(syncUntil) {
                     updates.send(it)
                 }
                 updates.close()
+                return@run null
             }
+                ?.also { throw it }
         }
     }
 
@@ -58,13 +63,14 @@ class User private constructor(
 
         suspend fun lookupUsername(username: String) =
             txr.run(UserData.TransactionNames.LOOKUP_USERNAME) {
-                sendReceive<Pair<Boolean,String>,UserData?>(Pair(false, username))
+                sendReceive<Pair<Boolean, String>, UserData?>(Pair(false, username))
             }?.let {
                 get(it.id)
             }
+
         suspend fun lookupUsernameLoose(username: String) =
             txr.run(UserData.TransactionNames.LOOKUP_USERNAME) {
-                sendReceive<Pair<Boolean,String>,List<UserData>>(Pair(true,username))
+                sendReceive<Pair<Boolean, String>, List<UserData>>(Pair(true, username))
             }.mapNotNull {
                 get(it.id)
             }

@@ -2,6 +2,7 @@ import data.TimestampedId
 import kotlinx.coroutines.launch
 import react.*
 import util.react.ComposedElements
+import util.react.ReactTXRProvider
 import util.react.useCoroutineScope
 import ws.connectWebSocket
 import ws.websocketUrl
@@ -15,7 +16,7 @@ external interface ServerConnectionProps : Props {
 }
 
 interface ServerConnectionChildrenData
-class SCDataConnected(val txr: KWSTransactor) : ServerConnectionChildrenData
+class SCDataConnected() : ServerConnectionChildrenData
 class SCDataDisconnected(val failed: Boolean) : ServerConnectionChildrenData
 
 val ServerConnection = FC<ServerConnectionProps> { props ->
@@ -50,15 +51,15 @@ val ServerConnection = FC<ServerConnectionProps> { props ->
         }
     }
 
-    props.children(
-        this,
-        if (txr == null)
-            SCDataDisconnected(
-                failed = failed
-            )
-        else
-            SCDataConnected(
-                txr = txr!!
-            )
-    )
+    ReactTXRProvider(txr) {
+        props.children(
+            this,
+            if (txr == null)
+                SCDataDisconnected(
+                    failed = failed
+                )
+            else
+                SCDataConnected()
+        )
+    }
 }

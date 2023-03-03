@@ -112,7 +112,7 @@ class User private constructor(
 
     object Handle {
         fun watchUser() = KWSTransactionHandle(UserData.TransactionNames.SYNC) {
-            val user = Instances[nextData()]
+            val user = Instances[nextData<TimestampedId.SerialBox>().v]
                 ?: run {
                     send(false)
                     return@KWSTransactionHandle

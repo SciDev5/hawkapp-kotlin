@@ -49,9 +49,7 @@ val AppMain = FC<Props> { _ ->
         children = childElements {
             if (it is SCDataConnected) {
                 +"CONNECTED"
-                AppConnected {
-                    txr = it.txr
-                }
+                AppConnected { }
             }
             if (it is SCDataDisconnected) {
                 +"DISCONNECTED"

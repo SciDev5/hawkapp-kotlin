@@ -17,6 +17,7 @@ import react.useState
 import util.coroutine.UntilLock
 import util.react.suspendCallback
 import util.react.useCoroutineScope
+import util.react.useTXR
 import wsTransaction.KWSTransactor
 import wsTransaction.syncReceive
 
@@ -49,21 +50,20 @@ suspend fun leaveDM(
         send(zone.id.serial())
     }
 
-external interface DMsPanelProps : Props {
-    var txr: KWSTransactor
-}
+external interface DMsPanelProps : Props
 
-val DMsPanel = FC<DMsPanelProps> { props ->
+val DMsPanel = FC<DMsPanelProps> { _ ->
     var zones by useState<Set<DMZoneData>>(emptySet())
     var selectedZone by useState<TimestampedId?>(null)
 
     val scope = useCoroutineScope()
+    val txr = useTXR()
 
-    useEffect(props.txr, scope) {
+    useEffect(txr, scope) {
         val cleanupSignal = UntilLock().also { cleanup { it.unlock() } }
 
         scope.launch {
-            watchDMList(props.txr, cleanupSignal).collect {
+            watchDMList(txr, cleanupSignal).collect {
                 zones = it
             }
         }
@@ -86,7 +86,7 @@ val DMsPanel = FC<DMsPanelProps> { props ->
                 onClick = suspendCallback(scope) {
                     val username = window.prompt("username?:")
                         ?: return@suspendCallback
-                    val user = User.Instances.withTxr(props.txr)
+                    val user = User.Instances.withTxr(txr)
                         .lookupUsername(username)
                         ?: run {
                             window.alert("USER NOT FOUND")
@@ -94,7 +94,7 @@ val DMsPanel = FC<DMsPanelProps> { props ->
                         }
                     window.alert("making dm with '${user.username}'")
 
-                    createDM(props.txr, setOf(user))
+                    createDM(txr, setOf(user))
                 }
                 +"Begin Message"
             }
@@ -114,7 +114,7 @@ val DMsPanel = FC<DMsPanelProps> { props ->
                     button {
                         onClick = suspendCallback(scope) {
                             if (window.confirm("u sure?"))
-                                leaveDM(props.txr, zone)
+                                leaveDM(txr, zone)
                         }
                         +"x"
                     }
@@ -131,7 +131,6 @@ val DMsPanel = FC<DMsPanelProps> { props ->
         selectedZone?.also { zoneId ->
             div {
                 MessageChannel {
-                    txr = props.txr
                     channelLookup = ChannelLookupData.DM(zoneId)
                 }
             }
