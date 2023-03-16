@@ -1,12 +1,11 @@
 package channel
 
-import User
+import clientData.DMZone
+import clientData.User
 import data.TimestampedId
 import data.channel.ChannelLookupData
 import data.channel.DMZoneData
-import data.user.UserData
 import kotlinx.browser.window
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import react.FC
 import react.Props
@@ -18,37 +17,8 @@ import util.coroutine.UntilLock
 import util.react.suspendCallback
 import util.react.useCoroutineScope
 import util.react.useTXR
-import wsTransaction.KWSTransactor
-import wsTransaction.syncReceive
+import util.withTxr
 
-fun watchDMList(
-    txr: KWSTransactor,
-    closeEarlySignal: UntilLock
-) = flow {
-    txr.run(DMZoneData.TransactionNames.WATCH_LIST) {
-        syncReceive<Set<DMZoneData>>(closeEarlySignal) {
-            emit(it)
-        }
-    }
-}
-
-suspend fun createDM(
-    txr: KWSTransactor,
-    writers: Set<User>
-) =
-    txr.run(DMZoneData.TransactionNames.CREATE) {
-        sendReceive<List<UserData>, TimestampedId.SerialBox>(
-            writers.map { it.data }
-        ).v
-    }
-
-suspend fun leaveDM(
-    txr: KWSTransactor,
-    zone: DMZoneData
-) =
-    txr.run(DMZoneData.TransactionNames.LEAVE) {
-        send(zone.id.serial())
-    }
 
 external interface DMsPanelProps : Props
 
@@ -63,7 +33,7 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
         val cleanupSignal = UntilLock().also { cleanup { it.unlock() } }
 
         scope.launch {
-            watchDMList(txr, cleanupSignal).collect {
+            DMZone.Instances.watchList(cleanupSignal).collect {
                 zones = it
             }
         }
@@ -94,7 +64,7 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
                         }
                     window.alert("making dm with '${user.username}'")
 
-                    createDM(txr, setOf(user))
+                    DMZone.Instances.withTxr(txr).create(setOf(user))
                 }
                 +"Begin Message"
             }
@@ -114,7 +84,7 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
                     button {
                         onClick = suspendCallback(scope) {
                             if (window.confirm("u sure?"))
-                                leaveDM(txr, zone)
+                                DMZone.Instances.withTxr(txr).leave(zone)
                         }
                         +"x"
                     }

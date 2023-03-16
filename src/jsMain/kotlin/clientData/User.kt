@@ -1,3 +1,5 @@
+package clientData
+
 import data.TimestampedId
 import data.user.UserData
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -45,13 +47,7 @@ class User private constructor(
         }
     }
 
-    object Instances : IdSingletonFetchMap<User, TimestampedId>() {
-        private lateinit var txr: KWSTransactor
-        fun withTxr(txr: KWSTransactor): Instances {
-            this.txr = txr
-            return this
-        }
-
+    object Instances : IdSingletonFetchMap<User, TimestampedId>(), WithTxr by WithTxr() {
         override suspend fun readFetch(id: TimestampedId) =
             txr.run(UserData.TransactionNames.GET) {
                 sendReceive<TimestampedId.SerialBox, UserData?>(id.serial())

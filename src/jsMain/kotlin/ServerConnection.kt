@@ -16,7 +16,10 @@ external interface ServerConnectionProps : Props {
 }
 
 interface ServerConnectionChildrenData
-class SCDataConnected() : ServerConnectionChildrenData
+class SCDataConnected(
+    val txr: KWSTransactor
+) : ServerConnectionChildrenData
+
 class SCDataDisconnected(val failed: Boolean) : ServerConnectionChildrenData
 
 val ServerConnection = FC<ServerConnectionProps> { props ->
@@ -59,7 +62,9 @@ val ServerConnection = FC<ServerConnectionProps> { props ->
                     failed = failed
                 )
             else
-                SCDataConnected()
+                SCDataConnected(
+                    txr = txr!!
+                )
         )
     }
 }

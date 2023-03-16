@@ -12,12 +12,14 @@ class ClientConnection private constructor(
     private val wtx = KWSTransactor.build(ws) {
         handle(MessageChannel.Handle.listen(user))
 
+        handle(DMZone.Handle.get(user))
+        handle(DMZone.Handle.sync(user))
         handle(DMZone.Handle.watchOwnList(user))
         handle(DMZone.Handle.create(user))
         handle(DMZone.Handle.delete(user))
 
-        handle(User.Handle.getUser())
-        handle(User.Handle.watchUser())
+        handle(User.Handle.get())
+        handle(User.Handle.sync())
         handle(User.Handle.lookupUsername())
     }
 

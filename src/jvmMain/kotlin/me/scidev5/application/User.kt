@@ -111,7 +111,7 @@ class User private constructor(
     }
 
     object Handle {
-        fun watchUser() = KWSTransactionHandle(UserData.TransactionNames.SYNC) {
+        fun sync() = KWSTransactionHandle(UserData.TransactionNames.SYNC) {
             val user = Instances[nextData<TimestampedId.SerialBox>().v]
                 ?: run {
                     send(false)
@@ -123,7 +123,7 @@ class User private constructor(
             syncSend(watch, cleanup = { endWatch() })
 
         }
-        fun getUser() = KWSTransactionHandle(UserData.TransactionNames.GET) {
+        fun get() = KWSTransactionHandle(UserData.TransactionNames.GET) {
             send(Instances[nextData<TimestampedId.SerialBox>().v]?.data)
         }
         fun lookupUsername() = KWSTransactionHandle(UserData.TransactionNames.LOOKUP_USERNAME) {

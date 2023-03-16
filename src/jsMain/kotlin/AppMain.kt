@@ -1,3 +1,5 @@
+import clientData.DMZone
+import clientData.User
 import data.user.UserData
 import kotlinx.browser.window
 import react.FC
@@ -7,6 +9,7 @@ import react.dom.html.ReactHTML.div
 import util.react.childElements
 import util.react.suspendCallback
 import util.react.useCoroutineScope
+import util.withTxr
 
 
 val AppMain = FC<Props> { _ ->
@@ -48,6 +51,8 @@ val AppMain = FC<Props> { _ ->
         this.userId = userId
         children = childElements {
             if (it is SCDataConnected) {
+                User.Instances.withTxr(it.txr)
+                DMZone.Instances.withTxr(it.txr)
                 +"CONNECTED"
                 AppConnected { }
             }

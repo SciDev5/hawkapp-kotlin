@@ -292,5 +292,38 @@ private constructor(
             if (zone.members.none { it.isControllingMember })
                 zone.delete()
         }
+
+
+
+        fun sync(
+            user: User
+        ) = KWSTransactionHandle(DMZoneData.TransactionNames.SYNC) {
+            val zone = Instances[nextData<TimestampedId.SerialBox>().v]
+                ?: run {
+                    send(false)
+                    return@KWSTransactionHandle
+                }
+            if (zone.members.none { it.userId == user.id }) {
+                // Not allowed to know about DMs it's not from
+                send(false)
+                return@KWSTransactionHandle
+            }
+            send(true)
+
+            val (watch, endWatch) = zone.watch()
+            syncSend(watch, cleanup = { endWatch() })
+
+        }
+        fun get(
+            user: User
+        ) = KWSTransactionHandle(DMZoneData.TransactionNames.GET) {
+            send(Instances[nextData<TimestampedId.SerialBox>().v]?.let { zone ->
+                if (zone.members.none { it.userId == user.id })
+                    // Not allowed to know about DMs it's not from
+                    null
+                else
+                    zone.data
+            })
+        }
     }
 }

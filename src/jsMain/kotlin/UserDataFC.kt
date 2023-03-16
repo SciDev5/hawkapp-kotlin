@@ -1,3 +1,4 @@
+import clientData.User
 import data.TimestampedId
 import data.user.UserData
 import kotlinx.coroutines.launch
@@ -10,6 +11,7 @@ import util.react.ComposedElements
 import util.react.childElements
 import util.react.useCoroutineScope
 import util.react.useTXR
+import util.withTxr
 
 external interface UserFCProps : Props {
     var id: TimestampedId

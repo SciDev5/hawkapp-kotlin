@@ -170,7 +170,7 @@ class KWSTransactor(
 
     private suspend fun receiveData(txId: Long, data: String?) {
         if (txId !in transactions)
-            throw Error("transaction for data [$txId] not found")
+            throw Error("transaction for data [${txId.toULong().toString(16)}] not found")
         transactions[txId]!!.receiveData(data)
     }
 
