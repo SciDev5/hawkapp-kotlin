@@ -1,10 +1,13 @@
 package channel
 
+import app.FCDMChannelSelector
 import clientData.DMZone
 import clientData.User
+import csstype.*
 import data.TimestampedId
 import data.channel.ChannelLookupData
 import data.channel.DMZoneData
+import emotion.react.css
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import react.FC
@@ -50,63 +53,78 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
     }
 
     div {
-        div { +"Your Messages:" }
         div {
-            button {
-                onClick = suspendCallback(scope) {
-                    val username = window.prompt("username?:")
-                        ?: return@suspendCallback
-                    val user = User.Instances.withTxr(txr)
-                        .lookupUsername(username)
-                        ?: run {
-                            window.alert("USER NOT FOUND")
-                            return@suspendCallback
-                        }
-                    window.alert("making dm with '${user.username}'")
+            +"Your Messages:"
+        }
+        div {
+            css {
+                position = Position.relative
 
-                    DMZone.Instances.withTxr(txr).create(setOf(user))
-                }
-                +"Begin Message"
+                display = Display.flex
+                flexDirection = FlexDirection.row
+
+                height = 90.0.vh
+                border = Border(1.0.px, LineStyle.solid)
+                borderColor = Color("#000")
             }
-        }
 
-        if (zones.isEmpty()) {
-            div { +"lmao lonely" }
-        }
+            div {
+                css {
+                    flexGrow = number(0.0)
+                    flexBasis = 10.0.em
 
-        div {
-            for (zone in zones) {
+                    height = 100.0.pct
+                }
                 div {
-                    val isSelected = zone.id == selectedZone
-                    if (isSelected)
-                        +"> "
-                    +":: ${zone.members.joinToString(", ") { it.id.toString() }}"
                     button {
                         onClick = suspendCallback(scope) {
+                            val username = window.prompt("username?:")
+                                ?: return@suspendCallback
+                            val user = User.Instances.withTxr(txr)
+                                .lookupUsername(username)
+                                ?: run {
+                                    window.alert("USER NOT FOUND")
+                                    return@suspendCallback
+                                }
+                            window.alert("making dm with '${user.username}'")
+
+                            DMZone.Instances.withTxr(txr).create(setOf(user))
+                        }
+                        +"Begin Message"
+                    }
+                }
+                if (zones.isEmpty()) {
+                    div { +"lmao lonely" }
+                }
+                for (zone in zones) {
+                    val isSelected = zone.id == selectedZone
+                    FCDMChannelSelector {
+                        this.zone = zone
+                        this.selected = isSelected
+                        this.onSelect = {
+                            selectedZone = zone.id
+                        }
+                        this.onDelete = {
                             if (window.confirm("u sure?"))
                                 DMZone.Instances.withTxr(txr).leave(zone)
                         }
-                        +"x"
                     }
-                    if (!isSelected)
-                        button {
-                            onClick = suspendCallback(scope) {
-                                selectedZone = zone.id
-                            }
-                            +"select"
-                        }
                 }
             }
-        }
-        selectedZone?.also { zoneId ->
             div {
-                MessageChannel {
-                    channelLookup = ChannelLookupData.DM(zoneId)
+                css {
+                    height = 100.0.pct
+                    flexGrow = number(1.0)
                 }
-            }
-        } ?: run {
-            div {
-                +"[[NO DM SELECTED]]"
+                selectedZone?.also { zoneId ->
+                    MessageChannel {
+                        channelLookup = ChannelLookupData.DM(zoneId)
+                    }
+                } ?: run {
+                    div {
+                        +" -- Select a Message --"
+                    }
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ import kotlinx.coroutines.launch
 import react.*
 import util.react.ComposedElements
 import util.react.ReactTXRProvider
+import util.react.ReactUserIdProvider
 import util.react.useCoroutineScope
 import ws.connectWebSocket
 import ws.websocketUrl
@@ -55,16 +56,18 @@ val ServerConnection = FC<ServerConnectionProps> { props ->
     }
 
     ReactTXRProvider(txr) {
-        props.children(
-            this,
-            if (txr == null)
-                SCDataDisconnected(
-                    failed = failed
-                )
-            else
-                SCDataConnected(
-                    txr = txr!!
-                )
-        )
+        ReactUserIdProvider(props.userId) {
+            props.children(
+                this,
+                if (txr == null)
+                    SCDataDisconnected(
+                        failed = failed
+                    )
+                else
+                    SCDataConnected(
+                        txr = txr!!
+                    )
+            )
+        }
     }
 }
