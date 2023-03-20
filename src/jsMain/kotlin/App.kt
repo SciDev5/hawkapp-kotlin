@@ -5,7 +5,6 @@ import react.FC
 import react.Props
 import react.create
 import react.router.dom.BrowserRouter
-import react.router.useInRouterContext
 import react.router.useLocation
 import react.useState
 import util.react.childElements
@@ -42,10 +41,10 @@ val AppMain = FC<Props> { _ ->
 
 
 private val AppRoutes = FC<Props> {
-    println(useInRouterContext())
+    val user = Auth.useCurrentUserId()
     FCTopBar { }
     when (useLocation().pathname) {
-        Endpoints.Page.main -> AppMain { }
+        Endpoints.Page.main -> if (user != null) AppMain { } else AppLoggedOut { }
         Endpoints.Page.login -> AppLogin { }
         else -> App404 { }
     }
