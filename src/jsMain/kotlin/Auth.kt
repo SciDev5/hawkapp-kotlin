@@ -69,7 +69,6 @@ object Auth {
         }
         return userIdState
     }
-
     private fun updateSession(id: TimestampedId?) {
         userId = id
         sessionUpdateHandlers.forEach { it(id) }

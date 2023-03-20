@@ -36,15 +36,6 @@ fun HTML.index() {
     }
 }
 
-fun HTML.notFoundPage() {
-    head {
-        title("HawkApp - 404")
-    }
-    body {
-        +"404 lol"
-    }
-}
-
 
 fun main() {
     databaseInit()
@@ -71,7 +62,6 @@ fun main() {
                 uK.username = n
                 call.respondText(n, ContentType.Text.Plain)
             }
-            get("/") { call.respondHtml(HttpStatusCode.OK, HTML::index) }
 
             authRoute()
 
@@ -91,8 +81,8 @@ fun main() {
 
             static("/static") { resources() }
 
-            get("/*") { call.respondHtml(HttpStatusCode.NotFound, HTML::notFoundPage) }
-
+            get("/") { call.respondHtml(HttpStatusCode.OK, HTML::index) }
+            get("/*") { call.respondHtml(HttpStatusCode.OK, HTML::index) }
         }
     }.start(wait = true)
 }

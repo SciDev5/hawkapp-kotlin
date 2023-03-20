@@ -7,7 +7,7 @@ fun main() {
     val container = document.createElement("div")
     document.body!!.appendChild(container)
 
-    val welcome = AppMain.create { }
+    val welcome = App.create { }
 
     createRoot(container).render(welcome)
 }

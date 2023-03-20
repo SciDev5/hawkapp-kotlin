@@ -6,4 +6,9 @@ object Endpoints {
         const val logout = "/o"
         const val signup = "/s"
     }
+
+    object Page {
+        const val main = "/"
+        const val login = "/l"
+    }
 }
