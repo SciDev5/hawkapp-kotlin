@@ -8,3 +8,6 @@ class ComposedElements<T>(val block: ChildrenBuilder.(T) -> Unit) {
 }
 fun <T> childElements(block: ChildrenBuilder.(T) -> Unit) =
     ComposedElements(block)
+fun childElementsU(block: ChildrenBuilder.() -> Unit) =
+    ComposedElements<Unit> { _ -> block() }
+

@@ -6,11 +6,13 @@ import react.FC
 import react.Props
 import react.dom.html.ReactHTML.nav
 import react.router.dom.Link
+import style.flexChild
+import style.styled
 
 val FCTopBar = FC<Props> { _ ->
     val currentUserId = Auth.useCurrentUserId()
 
-    nav {
+    styled(nav,"nav", flexChild(grow = 0.0)) {
         Link {
             to = Endpoints.Page.main
 
@@ -20,7 +22,7 @@ val FCTopBar = FC<Props> { _ ->
             to = Endpoints.Page.login
 
             if (currentUserId != null) {
-                + "Logout"
+                + "Account"
             } else {
                 + "Login"
             }
