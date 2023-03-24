@@ -66,17 +66,19 @@ val UserDataFC = FC<UserFCProps> { props ->
 external interface UserDataReceiverProps : Props {
     var id: TimestampedId
 }
-val UserCard = FC<UserDataReceiverProps> { props ->
+val UserNameText = FC<UserDataReceiverProps> { props ->
     UserDataFC {
-        this.id = props.id
+        id = props.id
+        withFound = childElements { (_, data) ->
+            +"@${data.username}"
+        }
+        withLoading = childElements { _ ->
+            +"..."
+        }
         withNotFound = childElements { id ->
-            + "<@$id>"
-        }
-        withLoading = childElements { id ->
-            + "...<@$id>"
-        }
-        withFound = childElements { (_,userData) ->
-            + "'${userData.username}'"
+            +"[missing user #${
+                id.v.toULong().toString(16).padStart(16, '0')
+            }]"
         }
     }
 }

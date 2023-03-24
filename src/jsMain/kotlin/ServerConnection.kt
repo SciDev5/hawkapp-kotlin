@@ -13,7 +13,7 @@ import wsTransaction.KWSTransactor
 external interface ServerConnectionProps : Props {
     var userId: TimestampedId?
     var children: ComposedElements<ServerConnectionChildrenData>
-
+    var updateN: Int
 }
 
 interface ServerConnectionChildrenData
@@ -29,7 +29,7 @@ val ServerConnection = FC<ServerConnectionProps> { props ->
 
     val scope = useCoroutineScope()
 
-    useEffect(props.userId?.v, scope) {
+    useEffect(props.userId?.v, scope, props.updateN) {
         var connectionEnded = false
         val ws = connectWebSocket(websocketUrl(Endpoints.websocketPrimary), scope)
         failed = false

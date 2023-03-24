@@ -1,14 +1,18 @@
 package app
 
-import UserDataFC
+import UserNameText
 import csstype.em
 import csstype.number
 import data.channel.ChannelMessageData
-import emotion.react.css
 import react.FC
 import react.Props
-import react.dom.html.ReactHTML.div
-import util.react.childElements
+import react.dom.html.ReactHTML.span
+import style.StyleColors
+import style.flexChild
+import style.styled
+import style.styledDiv
+import util.react.useUserId
+import kotlin.js.Date
 
 external interface FCChannelMessageProps : Props {
     var msg: ChannelMessageData
@@ -16,31 +20,28 @@ external interface FCChannelMessageProps : Props {
 }
 
 val FCChannelMessage = FC<FCChannelMessageProps> { props ->
-    div {
-        css {
-            padding = 0.5.em
-            opacity = if (props.isUnsentFromSelf)
-                number(0.5)
-            else
-                null
-        }
-        div {
-            UserDataFC {
+    val selfId = useUserId()
+    styledDiv("message", flexChild(0.0), {
+        padding = 0.5.em
+        opacity = if (props.isUnsentFromSelf) number(0.5) else null
+    }) {
+        styledDiv("header", {
+            fontSize = 0.8.em
+            background = if (props.msg.sender == selfId)
+                StyleColors.bgSlightEm else StyleColors.bgLighten
+            padding = 0.25.em
+        }) {
+            UserNameText {
                 id = props.msg.sender
-                withFound = childElements { (_, data) ->
-                    +data.username
-                }
-                withLoading = childElements { _ ->
-                    +"..."
-                }
-                withNotFound = childElements { id ->
-                    +"[missing user #${
-                        id.v.toULong().toString(16).padStart(16, '0')
-                    }]"
-                }
+            }
+            styled(span, "time", {
+                opacity = number(0.7)
+                marginInline = 0.5.em
+            }) {
+                + Date(props.msg.msgId.timestampPart * 1000).toLocaleString()
             }
         }
-        div {
+        styledDiv("content", { marginTop = 0.25.em }) {
             +props.msg.content.t
         }
     }

@@ -7,10 +7,11 @@ import data.TimestampedId
 import data.channel.ChannelData
 import data.channel.ChannelLookupData
 import data.channel.ChannelMessageData
-import emotion.react.css
 import kotlinx.coroutines.launch
 import react.*
-import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.h1
+import react.dom.html.ReactHTML.p
+import style.*
 import util.react.useCoroutineScope
 import util.react.useTXR
 import util.react.useUserId
@@ -93,25 +94,17 @@ val MessageChannel = FC<MessageChannelProps> { props ->
         }
     }
 
-    if (failed) div {
+    if (failed) styledDiv("failed", cssDMsMessagesLayout) {
         +" !! FAILED !! "
-    } else if (loading) div {
-        + " ... loading ... "
-    } else div {
-        css {
-            display = Display.flex
-            flexDirection = FlexDirection.column
-            height = 100.0.pct
-        }
-        div {
-            css {
-                display = Display.flex
-                flexDirection = FlexDirection.columnReverse
-                overflowY = Overflow.scroll
-                overflowX = Overflow.clip
-
-                flexGrow = number(1.0)
-            }
+    } else if (loading) styledDiv("loading", cssDMsMessagesLayout) {
+        +" ... loading ... "
+    } else styledDiv("msgBox", cssDMsMessagesLayout, {
+        overflowY = Overflow.hidden
+    }, flexContainerVertical()) {
+        styledDiv("receive", flexChild(), flexContainer(FlexDirection.columnReverse), {
+            overflowY = Overflow.scroll
+            overflowX = Overflow.clip
+        }) {
             for (message in sent.slice(0 until sentBehindN)) {
                 FCChannelMessage {
                     this.msg = ChannelMessageData(selfUserId, TimestampedId(0), message)
@@ -122,6 +115,21 @@ val MessageChannel = FC<MessageChannelProps> { props ->
                 FCChannelMessage {
                     this.msg = message
                 }
+            }
+            styledDiv("beginning", flexContainerVertical(), {
+                margin = 1.0.em
+            }, cssTextCentered) {
+                styled(h1, "hdr", flexChild(0.0)) {
+                    +":: beginning of channel ::"
+                }
+                styled(p, "info", flexChild(0.0), {
+                    opacity = number(0.5)
+                    fontSize = 0.5.em
+                }) {
+                    +"[ CH : ${props.channelLookup} ]"
+                }
+
+                flexDividerHorizontal(0)
             }
         }
         FCChannelMessageInput {

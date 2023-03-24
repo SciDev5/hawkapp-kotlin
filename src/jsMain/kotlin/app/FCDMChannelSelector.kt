@@ -1,14 +1,16 @@
 package app
 
-import UserCard
-import csstype.Color
+import UserNameText
+import csstype.em
+import csstype.number
 import data.TimestampedId
 import data.channel.DMZoneData
-import emotion.react.css
 import react.FC
 import react.Props
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.span
+import style.*
 import util.react.suspendCallback
 import util.react.useCoroutineScope
 import util.react.useUserId
@@ -29,62 +31,73 @@ val FCDMChannelSelector = FC<FCDMChannelSelectorProps> { props ->
     val isAnnouncements = readOnlyMembers.isNotEmpty()
 
 
-    div {
+    styled(div, "dmEntry", flexContainerHorizontal(), {
+        background = if (props.selected)
+            StyleColors.bgEm else StyleColors.transparent
+        transition = StyleColors.bgFgTransition
+        margin = 0.5.em
+        borderRadius = 0.25.em
+        if (!props.selected) hover {
+            background = StyleColors.bgLightenHov
+        }
+    }) {
         onClick = suspendCallback(scope) {
             props.onSelect()
         }
-        css {
-            if (props.selected)
-                background = Color("#f00")
-            else
-                hover {
-                    background = Color("#7ff")
-                }
-        }
-        if (isAnnouncements) div {
-            if (canWrite) {
-                + "Send Announcements"
-            } else {
-                + "Announcements"
-            }
-        }
-        div {
-            fun user(id: TimestampedId) {
-                UserCard {
-                    this.id = id
-                }
-            }
-            if (isAnnouncements) {
-                val writers = props.zone.members
-                    .filter { it.writeAccess }
-                    .filterNot { it.id == selfUserId }
+        styledDiv("label", flexChild(), flexContainerVertical()) {
+            if (isAnnouncements) styledDiv("announcementLabel", flexChild(0.0)) {
                 if (canWrite) {
-                    // list readers
-                    for (mem in readOnlyMembers) {
-                        user(mem.id)
+                    +"Send Announcements"
+                } else {
+                    +"Announcements"
+                }
+            }
+            styledDiv("labelMain", flexChild(0.0), {
+                padding = 0.5.em
+            }) {
+                fun user(id: TimestampedId) {
+                    UserNameText {
+                        this.id = id
+                    }
+                }
+                if (isAnnouncements) {
+                    val writers = props.zone.members
+                        .filter { it.writeAccess }
+                        .filterNot { it.id == selfUserId }
+                    if (canWrite) {
+                        // list readers
+                        for (mem in readOnlyMembers) {
+                            user(mem.id)
+                        }
+                    } else {
+                        // list writers
+                        for (mem in writers) {
+                            user(mem.id)
+                        }
                     }
                 } else {
-                    // list writers
-                    for (mem in writers) {
+                    for (mem in props.zone.members.filterNot { it.id == selfUserId }) {
                         user(mem.id)
                     }
-                }
-            } else {
-                for (mem in props.zone.members.filterNot { it.id == selfUserId }) {
-                    user(mem.id)
-                }
-                if (props.zone.members.size == 1) {
-                    user(selfUserId)
-                    + " (alone)"
+                    if (props.zone.members.size == 1) {
+                        user(selfUserId)
+                        styled(span, "aloneMarker", {
+                            opacity = number(0.75)
+                            marginInline = 0.5.em
+                            fontSize = 0.75.em
+                        }) {
+                            +"(alone)"
+                        }
+                    }
                 }
             }
         }
 
-        button {
+        styled(button, "leaveButton", flexChild(0.0), InputStyle.muted) {
             onClick = suspendCallback(scope) {
                 props.onDelete()
             }
-            + "leave"
+            + "x"
         }
     }
 }

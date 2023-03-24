@@ -1,6 +1,7 @@
 import app.FCNav
 import clientData.DMZone
 import clientData.User
+import csstype.Overflow
 import csstype.vh
 import react.FC
 import react.Props
@@ -22,6 +23,7 @@ val AppMain = FC<Props> { _ ->
     var retry by useState(0)
 
     ServerConnection {
+        this.updateN = retry
         this.userId = userId
         children = childElements {
             if (it is SCDataConnected) {
@@ -50,7 +52,7 @@ private val AppRoutes = FC<Props> {
     styledDiv("_", flexContainerVertical(), { height = 100.0.vh }) {
         FCNav { }
         flexDividerHorizontal(0)
-        styledDiv("content", flexChild(), flexContainerVertical()) {
+        styledDiv("content", flexChild(), flexContainerVertical(), { overflow = Overflow.hidden}) {
             when (useLocation().pathname) {
                 Endpoints.Page.main -> if (user != null) AppMain { } else AppLoggedOut { }
                 Endpoints.Page.login -> AppLogin { }

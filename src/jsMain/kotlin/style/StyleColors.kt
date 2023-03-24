@@ -14,6 +14,7 @@ object StyleColors {
     val bgLighten = Color("#fff1")
     val bgLightenHov = Color("#fff4")
     val fgMain = Color("#fff")
+    val bgSlightEm = Color("#74f3")
     val bgEm = Color("#74f")
     val bgEmHov = Color("#2ecae3")
     val fgEm = Color("#fff")

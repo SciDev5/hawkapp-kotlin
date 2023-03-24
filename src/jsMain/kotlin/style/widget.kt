@@ -31,6 +31,11 @@ object InputStyle {
         color = StyleColors.fgMain
         border = Border(1.0.px, LineStyle.solid, StyleColors.border)
     }
+    val muted : CSSCallback = {
+        base()
+        background = StyleColors.transparent
+        color = StyleColors.fgMain
+    }
     val emphatic : CSSCallback = {
         base()
         background = StyleColors.bgEm

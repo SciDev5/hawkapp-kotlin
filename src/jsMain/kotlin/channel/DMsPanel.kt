@@ -7,15 +7,15 @@ import csstype.*
 import data.TimestampedId
 import data.channel.ChannelLookupData
 import data.channel.DMZoneData
-import emotion.react.css
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import react.FC
 import react.Props
 import react.dom.html.ReactHTML.button
-import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.p
 import react.useEffect
 import react.useState
+import style.*
 import util.coroutine.UntilLock
 import util.react.suspendCallback
 import util.react.useCoroutineScope
@@ -52,49 +52,38 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
             selectedZone = z
     }
 
-    div {
-        div {
-            +"Your Messages:"
-        }
-        div {
-            css {
-                position = Position.relative
+    styledDiv("DMs", flexChild(), flexContainerHorizontal(), { height = 100.0.pct }) {
+        styledDiv("list", flexChild(0.0), flexContainerVertical(), {
+            width = 20.0.em
+        }) {
+            styledDiv("header", flexChild(0.0), flexContainerVertical()) {
+                styled(button, "createDM", flexChild(0.0), InputStyle.base, {
+                    margin = 0.5.em
+                }) {
+                    onClick = suspendCallback(scope) {
+                        val username = window.prompt("username?:")
+                            ?: return@suspendCallback
+                        val user = User.Instances.withTxr(txr)
+                            .lookupUsername(username)
+                            ?: run {
+                                window.alert("USER NOT FOUND")
+                                return@suspendCallback
+                            }
+                        window.alert("making dm with '${user.username}'")
 
-                display = Display.flex
-                flexDirection = FlexDirection.row
-
-                height = 90.0.vh
-                border = Border(1.0.px, LineStyle.solid)
-                borderColor = Color("#000")
-            }
-
-            div {
-                css {
-                    flexGrow = number(0.0)
-                    flexBasis = 10.0.em
-
-                    height = 100.0.pct
-                }
-                div {
-                    button {
-                        onClick = suspendCallback(scope) {
-                            val username = window.prompt("username?:")
-                                ?: return@suspendCallback
-                            val user = User.Instances.withTxr(txr)
-                                .lookupUsername(username)
-                                ?: run {
-                                    window.alert("USER NOT FOUND")
-                                    return@suspendCallback
-                                }
-                            window.alert("making dm with '${user.username}'")
-
-                            DMZone.Instances.withTxr(txr).create(setOf(user))
-                        }
-                        +"Begin Message"
+                        DMZone.Instances.withTxr(txr).create(setOf(user))
                     }
+                    +"Begin Message"
                 }
+            }
+            flexDividerHorizontal(0)
+            styledDiv("dmsList", flexChild(), {
+                overflowX = Overflow.hidden
+            }) {
                 if (zones.isEmpty()) {
-                    div { +"lmao lonely" }
+                    styled(p, "noMessages", {
+                        margin = 0.5.em
+                    }) { +"No Message Channels" }
                 }
                 for (zone in zones) {
                     val isSelected = zone.id == selectedZone
@@ -105,24 +94,23 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
                             selectedZone = zone.id
                         }
                         this.onDelete = {
-                            if (window.confirm("u sure?"))
+                            if (window.confirm("Are you sure you want to leave this message chain?"))
                                 DMZone.Instances.withTxr(txr).leave(zone)
                         }
                     }
                 }
             }
-            div {
-                css {
-                    height = 100.0.pct
-                    flexGrow = number(1.0)
+        }
+        flexDividerVertical(0)
+        styledDiv("messages", flexChild(), flexContainerHorizontal()) {
+            selectedZone?.also { zoneId ->
+                MessageChannel {
+                    channelLookup = ChannelLookupData.DM(zoneId)
                 }
-                selectedZone?.also { zoneId ->
-                    MessageChannel {
-                        channelLookup = ChannelLookupData.DM(zoneId)
-                    }
-                } ?: run {
-                    div {
-                        +" -- Select a Message --"
+            } ?: run {
+                styledDiv("no selection", cssDMsMessagesLayout) {
+                    styled(p, "message", cssTextCentered, { fontWeight = FontWeight.bold }) {
+                        + ":: Select a Message Channel ::"
                     }
                 }
             }
