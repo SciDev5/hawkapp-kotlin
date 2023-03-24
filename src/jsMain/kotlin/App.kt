@@ -1,4 +1,4 @@
-import app.FCTopBar
+import app.FCNav
 import clientData.DMZone
 import clientData.User
 import csstype.vh
@@ -48,7 +48,7 @@ val AppMain = FC<Props> { _ ->
 private val AppRoutes = FC<Props> {
     val user = Auth.useCurrentUserId()
     styledDiv("_", flexContainerVertical(), { height = 100.0.vh }) {
-        FCTopBar { }
+        FCNav { }
         flexDividerHorizontal(0)
         styledDiv("content", flexChild(), flexContainerVertical()) {
             when (useLocation().pathname) {

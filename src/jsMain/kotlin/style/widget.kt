@@ -4,7 +4,6 @@ import csstype.*
 
 object InputStyle {
 
-    @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE", "USELESS_CAST")
     val base: CSSCallback = {
         fontFamily = getSansFont()
         background = StyleColors.bgLighten
@@ -13,7 +12,7 @@ object InputStyle {
         paddingInline = 0.5.em
         paddingBlock = 0.3.em
 
-        transition = "0.3s background-color, 0.3s color" as Any as Transition
+        transition = StyleColors.bgFgTransition
 
         not(":disabled") {
             hover {
