@@ -2,6 +2,7 @@ package me.scidev5.application
 
 import me.scidev5.application.messageChannel.DMZone
 import me.scidev5.application.messageChannel.MessageChannel
+import me.scidev5.application.push.Notifications
 import me.scidev5.application.ws.ServerWebsocket
 import wsTransaction.KWSTransactor
 
@@ -21,6 +22,8 @@ class ClientConnection private constructor(
         handle(User.Handle.get())
         handle(User.Handle.sync())
         handle(User.Handle.lookupUsername())
+
+        handle(Notifications.Handle.manage(user))
     }
 
 

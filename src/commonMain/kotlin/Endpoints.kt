@@ -11,4 +11,7 @@ object Endpoints {
         const val main = "/"
         const val login = "/l"
     }
+
+    const val jsMain = "/static/hawkapp.js"
+    const val swMain = "/sw.js"
 }

@@ -1,11 +1,15 @@
 package me.scidev5.application
 
 import data.TimestampedId
+import data.push.PushSubscriptionInfoKT
 import data.user.UserData
+import me.scidev5.application.push.convert
+import me.scidev5.application.push.send
 import me.scidev5.application.util.extensions.TimestampedIdEntity
 import me.scidev5.application.util.extensions.TimestampedIdEntityClass
 import me.scidev5.application.util.extensions.TimestampedIdTable
 import me.scidev5.application.util.extensions.findFirst
+import nl.martijndwars.webpush.Notification
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
@@ -29,6 +33,12 @@ class User private constructor(
                 username = username
             )
         }
+
+    val subscriptions = mutableSetOf<PushSubscriptionInfoKT>()
+    fun sendNotification(content: String) {
+        for (sub in subscriptions)
+            Notification(sub.convert(), content).send()
+    }
 
     var username
         get() = ref.username

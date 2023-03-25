@@ -1,12 +1,15 @@
 import csstype.em
 import emotion.css.ClassName
 import kotlinx.browser.document
+import kotlinx.browser.window
 import react.create
 import react.dom.client.createRoot
 import style.StyleColors
 import style.getSansFont
 
 fun main() {
+    window.navigator.serviceWorker.register(Endpoints.swMain)
+
     document.body!!.className += " ${ClassName {
         fontFamily = getSansFont()
         margin = 0.0.em
