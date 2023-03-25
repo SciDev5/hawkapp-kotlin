@@ -78,6 +78,9 @@ class MessageChannel(
             // Has channel, continue
             send(true)
 
+            nextEmpty()
+            send(channel.messages)
+
             val messageDataToSend = channel.msgRelay.Receiver()
             val toFromClientData = WSTransactionBiChannel<ChannelMessageData.Content, ChannelMessageData>()
 

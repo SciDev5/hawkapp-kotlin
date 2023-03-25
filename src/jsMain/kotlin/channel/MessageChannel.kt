@@ -60,17 +60,19 @@ val MessageChannel = FC<MessageChannelProps> { props ->
         scope.launch {
             messages.clear()
 
-            // TODO: fetch messages
-
-            loading = false
-
             launch {
                 txr.run(ChannelData.TransactionNames.CHANNEL_LISTEN) {
                     val ok = sendReceive<ChannelLookupData, Boolean>(props.channelLookup)
+                    loading = false
                     if (!ok) {
                         failed = true
                         return@run
                     }
+                    sendEmpty()
+                    messages.addAll(nextData<List<ChannelMessageData>>())
+                    messages.sortBy { it.msgId.timestampPart } // sort oldest to most recent
+                    messageUpdateId = Random.nextInt()
+
                     runChannelUntilClose(biChan)
                 }
             }

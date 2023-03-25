@@ -93,11 +93,13 @@ val FCDMChannelSelector = FC<FCDMChannelSelectorProps> { props ->
             }
         }
 
-        styled(button, "leaveButton", flexChild(0.0), InputStyle.muted) {
+        styled(button, "leaveButton", flexChild(0.0), InputStyle.muted, {
+            paddingInline = 0.7.em
+        }) {
             onClick = suspendCallback(scope) {
                 props.onDelete()
             }
-            + "x"
+            + "✕"
         }
     }
 }
