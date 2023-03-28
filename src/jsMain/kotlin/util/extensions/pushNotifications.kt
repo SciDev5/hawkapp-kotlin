@@ -12,6 +12,8 @@ external object Notification {
      * @return "granted", "denied", or "default"
      */
     fun requestPermission(): Promise<String>
+
+    val permission: String
 }
 
 external interface PushSubscription {

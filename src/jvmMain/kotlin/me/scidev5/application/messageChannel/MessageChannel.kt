@@ -13,8 +13,11 @@ import wsTransaction.WSTransactionBiChannel
 import wsTransaction.runChannelUntilClose
 
 class MessageChannel(
-    val permissions: ChannelPermissionSet
+    val permissions: ChannelPermissionSet,
+    val distributeMessage: suspend (msg: ChannelMessageData) -> Unit
 ) {
+    private val viewingChannelMutable = mutableSetOf<User>()
+    val usersViewingChannel:Set<User> get() = viewingChannelMutable
 
     private val messages = mutableListOf<ChannelMessageData>()
 
@@ -30,6 +33,7 @@ class MessageChannel(
         messages.add(msg)
         msgRelay.send(msg)
         // TODO database things
+        distributeMessage(msg)
     }
 
     var onClose:(()->Unit)? = null
@@ -102,8 +106,10 @@ class MessageChannel(
 
             // Listen and close when done
             try {
+                channel.viewingChannelMutable.add(user)
                 runChannelUntilClose(toFromClientData)
             } finally {
+                channel.viewingChannelMutable.remove(user)
                 messageDataToSend.closeReceiving()
                 toFromClientData.close()
 

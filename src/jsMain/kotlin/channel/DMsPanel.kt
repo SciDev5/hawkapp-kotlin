@@ -3,7 +3,10 @@ package channel
 import app.FCDMChannelSelector
 import clientData.DMZone
 import clientData.User
-import csstype.*
+import csstype.FontWeight
+import csstype.Overflow
+import csstype.em
+import csstype.pct
 import data.TimestampedId
 import data.channel.ChannelLookupData
 import data.channel.DMZoneData
@@ -13,8 +16,10 @@ import react.FC
 import react.Props
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.p
+import react.router.dom.useSearchParams
 import react.useEffect
 import react.useState
+import serviceWorker.Notifications
 import style.*
 import util.coroutine.UntilLock
 import util.react.suspendCallback
@@ -26,11 +31,15 @@ import util.withTxr
 external interface DMsPanelProps : Props
 
 val DMsPanel = FC<DMsPanelProps> { _ ->
+    val (params, setParams) = useSearchParams()
+
     var zones by useState<Set<DMZoneData>>(emptySet())
     var selectedZone by useState<TimestampedId?>(null)
 
     val scope = useCoroutineScope()
     val txr = useTXR()
+
+    var notificationState by useState(Notifications.permission)
 
     useEffect(txr, scope) {
         val cleanupSignal = UntilLock().also { cleanup { it.unlock() } }
@@ -46,10 +55,16 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
         if (z != null)
             if (zones.none { it.id == z })
                 z = null
-        z = z ?: zones.firstOrNull()?.id
+        val locId = params.get("ch")?.toLongOrNull(16)?.let { TimestampedId(it) }
+        z = z ?: (zones.firstOrNull { it.id == locId } ?: zones.firstOrNull())?.id
 
         if (selectedZone != z)
             selectedZone = z
+
+        if (locId != selectedZone && selectedZone != null) {
+            params.set("ch", selectedZone!!.v.toString(16))
+            setParams(params)
+        }
     }
 
     styledDiv("DMs", flexChild(), flexContainerHorizontal(), { height = 100.0.pct }) {
@@ -57,6 +72,18 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
             width = 20.0.em
         }) {
             styledDiv("header", flexChild(0.0), flexContainerVertical()) {
+                if (notificationState == Notifications.Permission.DEFAULT) {
+                    styled(button, "subNotify", flexChild(0.0), InputStyle.emphatic, {
+                        margin = 0.5.em
+                    }) {
+                        onClick = suspendCallback(scope) {
+                            Notifications.unsubscribe(txr)
+                            Notifications.requestPermissionAndSubscribe(txr)
+                            notificationState = Notifications.permission
+                        }
+                        +"Activate Notifications"
+                    }
+                }
                 styled(button, "createDM", flexChild(0.0), InputStyle.base, {
                     margin = 0.5.em
                 }) {

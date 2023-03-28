@@ -12,6 +12,14 @@ object Notifications {
             else -> {}
         }
     }
+    val permission get() = when(Notification.permission) {
+        "granted" -> Permission.GRANTED
+        "denied" -> Permission.DENIED
+        else -> Permission.DEFAULT
+    }
+    enum class Permission {
+        GRANTED, DENIED, DEFAULT
+    }
 
     suspend fun unsubscribe(txr: KWSTransactor) =
         SWRegistration.ready().pushManager.getSubscription().await()?.let {

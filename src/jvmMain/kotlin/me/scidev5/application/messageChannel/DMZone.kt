@@ -2,12 +2,15 @@ package me.scidev5.application.messageChannel
 
 import data.TimestampedId
 import data.channel.ChannelMemberData
+import data.channel.ChannelMessageData
 import data.channel.DMZoneData
+import data.push.NotificationData
 import data.user.UserData
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
 import me.scidev5.application.User
+import me.scidev5.application.push.sendTo
 import me.scidev5.application.util.extensions.TimestampedIdEntity
 import me.scidev5.application.util.extensions.TimestampedIdEntityClass
 import me.scidev5.application.util.extensions.TimestampedIdTable
@@ -82,9 +85,27 @@ private constructor(
 
     private var channelCurrent: MessageChannel? = null
 
+    private suspend fun distributeMessage(msg: ChannelMessageData) {
+        val allMembers = this.members.mapNotNull { User.Instances[it.userId] }
+        val viewingMembers = channel?.usersViewingChannel
+            ?: throw Error("channel closed but still open???")
+        val sender = User.Instances[msg.sender]!!
+
+        NotificationData(
+            "Message from @${sender.username}",
+            msg.content.t,
+            "DM:${id.v.toString(16)}"
+        ).sendTo(
+            *(allMembers - viewingMembers).toTypedArray()
+        )
+
+        allMembers.forEach { User.Instances.forget(it) }
+        User.Instances.forget(sender)
+    }
+
     val channel
         get() = if (deleted) null else
-            (channelCurrent ?: MessageChannel(PermissionSet()))
+            (channelCurrent ?: MessageChannel(PermissionSet()) { distributeMessage(it) })
                 .also {
                     if (it != channelCurrent)
                         it.onClose = this::onChannelClose
