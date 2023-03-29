@@ -45,7 +45,13 @@ val FCDMChannelSelector = FC<FCDMChannelSelectorProps> { props ->
             props.onSelect()
         }
         styledDiv("label", flexChild(), flexContainerVertical()) {
-            if (isAnnouncements) styledDiv("announcementLabel", flexChild(0.0)) {
+            if (isAnnouncements) styledDiv("announcementLabel", flexChild(0.0), {
+                fontSize = 0.8.em
+                margin = 0.25.em
+                padding = 0.25.em
+                background = StyleColors.bgLighten
+                borderRadius = 0.25.em
+            }) {
                 if (canWrite) {
                     +"Send Announcements"
                 } else {

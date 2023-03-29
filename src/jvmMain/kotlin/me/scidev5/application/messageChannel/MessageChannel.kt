@@ -83,6 +83,9 @@ class MessageChannel(
             send(true)
 
             nextEmpty()
+            send(channel.permissions[user].write)
+
+            nextEmpty()
             send(channel.messages)
 
             val messageDataToSend = channel.msgRelay.Receiver()

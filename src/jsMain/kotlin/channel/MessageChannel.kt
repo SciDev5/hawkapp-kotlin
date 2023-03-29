@@ -38,6 +38,8 @@ val MessageChannel = FC<MessageChannelProps> { props ->
     var failed by useState(false)
     var loading by useState(true)
 
+    var isReadonly by useState(true)
+
     val sendMessage = useMemo<suspend (ChannelMessageData.Content) -> Unit>(sent, chan) {
         chan?.let {
             { msg ->
@@ -54,6 +56,7 @@ val MessageChannel = FC<MessageChannelProps> { props ->
     ) {
         failed = false
         loading = true
+        isReadonly = true
         var ranCleanup = false
         val biChan = WSTransactionBiChannel<ChannelMessageData, ChannelMessageData.Content>()
         chan = biChan
@@ -68,6 +71,10 @@ val MessageChannel = FC<MessageChannelProps> { props ->
                         failed = true
                         return@run
                     }
+                    sendEmpty()
+                    val canWrite = nextData<Boolean>()
+                    isReadonly = !canWrite
+
                     sendEmpty()
                     messages.addAll(nextData<List<ChannelMessageData>>())
                     messages.sortBy { it.msgId.timestampPart } // sort oldest to most recent
@@ -135,6 +142,7 @@ val MessageChannel = FC<MessageChannelProps> { props ->
             }
         }
         FCChannelMessageInput {
+            this.disabled = isReadonly
             this.sendMessage = sendMessage
         }
     }

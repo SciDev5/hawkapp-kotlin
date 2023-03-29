@@ -11,6 +11,8 @@ import data.TimestampedId
 import data.channel.ChannelLookupData
 import data.channel.DMZoneData
 import kotlinx.browser.window
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.launch
 import react.FC
 import react.Props
@@ -84,6 +86,29 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
                         +"Activate Notifications"
                     }
                 }
+                styled(button, "createAn", flexChild(0.0), InputStyle.base, {
+                    margin = 0.5.em
+                }) {
+                    onClick = suspendCallback(scope) {
+                        val users = flow {
+                            while (true) {
+                                val username = window.prompt("username? (cancel to finish):")
+                                    ?: break
+                                User.Instances.withTxr(txr)
+                                    .lookupUsername(username)?.let {
+                                        emit(it)
+                                    } ?: window.alert("USER NOT FOUND")
+                            }
+                        }.toSet() // there's a resource leak here but I'm beyond caring
+
+                        window.alert("making announcement with with:\n${users.joinToString("\n") {
+                            ":: '${it.username}'"
+                        }}")
+
+                        DMZone.Instances.withTxr(txr).create(emptySet(),users)
+                    }
+                    +"Begin Announcements"
+                }
                 styled(button, "createDM", flexChild(0.0), InputStyle.base, {
                     margin = 0.5.em
                 }) {
@@ -96,7 +121,7 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
                                 window.alert("USER NOT FOUND")
                                 return@suspendCallback
                             }
-                        window.alert("making dm with '${user.username}'")
+                        window.alert("making message channel with '${user.username}'")
 
                         DMZone.Instances.withTxr(txr).create(setOf(user))
                     }
