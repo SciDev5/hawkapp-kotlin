@@ -64,7 +64,7 @@ private constructor(
         if (deleted) return
         deleted = true
         for (member in members.map { it })
-            member.delete(false)
+            member.delete(true)
         transaction {
             ref.delete()
 
@@ -287,17 +287,24 @@ private constructor(
         fun create(
             user: User
         ) = KWSTransactionHandle(DMZoneData.TransactionNames.CREATE) {
-            val users = (nextData<List<UserData>>().mapNotNull {
+            val (rawWriters, rawReaders) = nextData<Pair<List<UserData>,List<UserData>>>()
+            val writers = (rawWriters.mapNotNull {
                 User.Instances[it.id]
             } + listOf(user)).toSet()
+            val readers = (rawReaders.mapNotNull {
+                User.Instances[it.id]
+            }).toSet() - writers // more resource leaks! (and I won't fix them >:3c)
 
             val zone = Instances.create(
                 DMZoneData(
                     TimestampedId(0),
-                    users.map { ChannelMemberData(it.id, true) }.toTypedArray()
+                    (
+                            writers.map { ChannelMemberData(it.id, true) } +
+                                    readers.map { ChannelMemberData(it.id, false) }
+                            ).toTypedArray()
                 )
             )
-            for (u in users)
+            for (u in writers + readers)
                 createDMForUserWatches[u.id]
                     .forEach { it.send(zone) }
             send(zone.id.serial())

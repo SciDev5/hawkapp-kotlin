@@ -71,11 +71,15 @@ class DMZone private constructor(
         }
 
         suspend fun create(
-            writers: Set<User>
+            writers: Set<User>,
+            readonly: Set<User> = emptySet(),
         ) =
             txr.run(DMZoneData.TransactionNames.CREATE) {
-                sendReceive<List<UserData>, TimestampedId.SerialBox>(
-                    writers.map { it.data }
+                sendReceive<Pair<List<UserData>,List<UserData>>, TimestampedId.SerialBox>(
+                    Pair(
+                        writers.map { it.data },
+                        readonly.map { it.data }
+                    ),
                 ).v
             }
 
