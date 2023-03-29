@@ -99,7 +99,7 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
                                         emit(it)
                                     } ?: window.alert("USER NOT FOUND")
                             }
-                        }.toSet() // there's a resource leak here, but I'm beyond caring
+                        }.toSet() // there's a resource leak here but I'm beyond caring
 
                         window.alert("making announcement with with:\n${users.joinToString("\n") {
                             ":: '${it.username}'"
