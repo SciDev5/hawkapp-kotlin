@@ -38,7 +38,7 @@ val FCChannelMessage = FC<FCChannelMessageProps> { props ->
                 opacity = number(0.7)
                 marginInline = 0.5.em
             }) {
-                + Date(props.msg.msgId.timestampPart * 1000).toLocaleString()
+                + Date(props.msg.msgId.timestampPart.toLong() * 1000).toLocaleString()
             }
         }
         styledDiv("content", { marginTop = 0.25.em }) {

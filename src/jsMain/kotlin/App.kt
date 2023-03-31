@@ -14,6 +14,7 @@ import style.flexContainerVertical
 import style.flexDividerHorizontal
 import style.styledDiv
 import util.react.childElements
+import util.react.provideModals
 import util.withTxr
 import kotlin.random.Random
 
@@ -63,7 +64,9 @@ private val AppRoutes = FC<Props> {
 }
 
 val App = FC<Props> { _ ->
-    BrowserRouter {
-        children = AppRoutes.create()
+    provideModals {
+        BrowserRouter {
+            children = AppRoutes.create()
+        }
     }
 }
