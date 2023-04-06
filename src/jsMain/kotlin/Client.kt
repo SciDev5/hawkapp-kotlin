@@ -8,7 +8,8 @@ import style.StyleColors
 import style.getSansFont
 
 fun main() {
-    window.navigator.serviceWorker.register(Endpoints.swMain)
+    if (js("'serviceWorker' in navigator").unsafeCast<Boolean>())
+        window.navigator.serviceWorker.register(Endpoints.swMain)
 
     document.body!!.className += " ${ClassName {
         fontFamily = getSansFont()
@@ -16,6 +17,7 @@ fun main() {
         StyleColors.cssBGMain(this)
         StyleColors.cssFGMain(this)
     }}"
+
 
     val container = document.createElement("div")
     document.body!!.appendChild(container)

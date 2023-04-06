@@ -6,6 +6,7 @@ object InputStyle {
 
     val base: CSSCallback = {
         fontFamily = getSansFont()
+        fontSize = 1.0.em
         background = StyleColors.bgLighten
         color = StyleColors.fgMain
         border = Border(0.0.px, LineStyle.hidden)

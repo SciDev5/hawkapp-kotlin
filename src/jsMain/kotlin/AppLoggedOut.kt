@@ -44,7 +44,7 @@ val AppLoggedOut = FC<Props> { _ ->
     }) {
         styled(h1, "title",{
             marginBlock = 0.1.em
-            fontSize = 30.0.vh
+            fontSize = "min(30vh,25vw)".unsafeCast<Length>()
             fontFamily = getTitleFont()
 
             background = "linear-gradient(#0000 30%, #0001)".unsafeCast<Background>()
@@ -60,6 +60,8 @@ val AppLoggedOut = FC<Props> { _ ->
             display = Display.block
             fontSize = 10.0.vh
             fontFamily = getTitleFont()
+
+            whiteSpace = WhiteSpace.nowrap
 
             float = Float.right
             marginTop = 8.0.vh

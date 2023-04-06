@@ -165,7 +165,7 @@ val DMsPanel = FC<DMsPanelProps> { _ ->
             width = 20.0.em
         }) {
             styledDiv("header", flexChild(0.0), flexContainerVertical()) {
-                if (notificationState == Notifications.Permission.DEFAULT) {
+                if (notificationState == Notifications.Permission.DEFAULT && js("window.isSecureContext").unsafeCast<Boolean>()) {
                     styled(button, "subNotify", flexChild(0.0), InputStyle.emphatic, {
                         margin = 0.5.em
                     }) {
